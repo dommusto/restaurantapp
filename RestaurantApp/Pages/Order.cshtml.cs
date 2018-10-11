@@ -11,6 +11,7 @@ namespace RestaurantApp.Pages
     {
         private readonly IHubContext<PushHub> _hubContext;
         private readonly IRestaurantService _restaurantService;
+
         [BindProperty]
         public string OrderId { get; set; }
         public string OrderStatus { get; set; }
