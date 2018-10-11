@@ -10,30 +10,34 @@ namespace RestaurantApp.Pages
     public class OrderModel : PageModel
     {
         private readonly IHubContext<PushHub> _hubContext;
-        private readonly IRestaurantService _restaurantService;
+        private readonly IOrdersRepository _ordersRepository;
+        private readonly IPay _cashier;
+        private readonly IPrepareOrder _cook;
 
         [BindProperty]
         public string OrderId { get; set; }
         public string OrderStatus { get; set; }
 
-        public OrderModel(IHubContext<PushHub> hubContext, IRestaurantService restaurantService)
+        public OrderModel(IHubContext<PushHub> hubContext, IOrdersRepository ordersRepository, IPay cashier, IPrepareOrder cook)
         {
             _hubContext = hubContext;
-            _restaurantService = restaurantService;
-            _restaurantService.OrderPrepared += OrderPreparedEventHandler;
-            _restaurantService.OrderPaid += OrderPaidEventHandler;
+            _ordersRepository = ordersRepository;
+            _cashier = cashier;
+            _cook = cook;
+            _cook.OrderPrepared += OrderPreparedEventHandler;
+            _cashier.OrderPaid += OrderPaidEventHandler;
         }
         
         public void OnGet(string orderId)
         {
             OrderId = orderId;
-            OrderStatus = _restaurantService.GetOrderStatus(orderId);
+            OrderStatus = _ordersRepository.GetOrderStatus(orderId);
         }
 
         public void OnPost()
         {
-            _restaurantService.Pay(OrderId);
-            OrderStatus = _restaurantService.GetOrderStatus(OrderId);
+            _cashier.Pay(OrderId);
+            OrderStatus = _ordersRepository.GetOrderStatus(OrderId);
         }
 
         private void OrderPreparedEventHandler(object sender, EventArgs e)

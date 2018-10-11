@@ -7,26 +7,30 @@ namespace RestaurantApp.Pages
 {
     public class IndexModel : PageModel
     {
-        private readonly IRestaurantService _restaurantService;
+        private readonly IOrdersRepository _ordersRepository;
+        private readonly IPrepareOrder _cook;
+        private readonly IMenuItemsRepository _menuMenuItemsRepository;
         public List<string> MenuItems { get; set; }
         [BindProperty]
         public string SelectedMenuItem { get; set; }
 
-        public IndexModel(IRestaurantService restaurantService)
+        public IndexModel(IOrdersRepository ordersRepository, IPrepareOrder cook, IMenuItemsRepository menuMenuItemsRepository)
         {
-            _restaurantService = restaurantService;
+            _ordersRepository = ordersRepository;
+            _cook = cook;
+            _menuMenuItemsRepository = menuMenuItemsRepository;
             MenuItems = new List<string>();
         }
 
         public void OnGet()
         {
-            MenuItems.AddRange(_restaurantService.GetItems());
+            MenuItems.AddRange(_menuMenuItemsRepository.GetItems());
         }
 
         public IActionResult OnPost()
         {
-            var orderId = _restaurantService.AddOrder(SelectedMenuItem);
-            _restaurantService.PrepareOrder(orderId);
+            var orderId = _ordersRepository.AddOrder(SelectedMenuItem);
+            _cook.PrepareOrder(orderId);
             return RedirectToPage("Order", "OnGet", new { orderId });
         }
     }

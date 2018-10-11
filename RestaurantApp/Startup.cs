@@ -30,7 +30,10 @@ namespace RestaurantApp
 
             services.AddSignalR();
 
-            services.AddSingleton<IRestaurantService, RestaurantService>();
+            services.AddSingleton<IOrdersRepository, OrdersRepository>();
+            services.AddSingleton<IPrepareOrder, Cook>();
+            services.AddSingleton<IPay, Cashier>();
+            services.AddSingleton<IMenuItemsRepository, MenuItemsRepository>();
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
         }
