@@ -1,0 +1,15 @@
+﻿@page
+@model RestaurantApp.Pages.OrderModel
+<h3>Your order reference : @Model.OrderId</h3>
+<div>
+    <h3 id="orderStatus">Order status: @Model.OrderStatus</h3>
+</div>
+<script src="~/lib/signalr/dist/browser/signalr.js"></script>
+<script src="~/js/chat.js"></script>
+<div id="payButton" style="visibility: hidden">
+    @using (Html.BeginForm())
+    {
+        <input type="hidden" value="@Model.OrderId" name="OrderId"/> 
+        <input type="submit" name="submit" value="Go to til and pay" />
+    }
+</div>

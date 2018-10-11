@@ -1,0 +1,13 @@
+﻿@page
+@model RestaurantApp.Pages.IndexModel
+<div>
+    <h3>
+        Welcome, select something from the menu to start your order
+    </h3>
+</div>
+
+@using (Html.BeginForm())
+{
+    @Html.DropDownList("SelectedMenuItem", new SelectList(Model.MenuItems, "SelectedMenuItem"))
+    <input type="submit" name="submit" value="Submit order" />
+}
