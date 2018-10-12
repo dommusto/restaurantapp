@@ -1,0 +1,32 @@
+﻿using System.Threading;
+using System.Threading.Tasks;
+using Paramore.Brighter;
+using RestaurantApp.Core.Commands;
+using RestaurantApp.Core.Events;
+
+namespace RestaurantApp.Core.CommandHandlers
+{
+    public class PrepareOrderCommandHandler : RequestHandler<PrepareOrderCommand>
+    {
+        private readonly IOrdersRepository _ordersRepository;
+        private readonly IAmACommandProcessor _commandProcessor;
+
+        public PrepareOrderCommandHandler(IOrdersRepository ordersRepository, IAmACommandProcessor commandProcessor)
+        {
+            _ordersRepository = ordersRepository;
+            _commandProcessor = commandProcessor;
+        }
+
+
+        public override PrepareOrderCommand Handle(PrepareOrderCommand command)
+        {
+            Task.Run(() =>
+            {
+                _ordersRepository.UpdateOrderStatus(command.OrderId, "Preparing food");
+                Thread.Sleep(5000);
+                _commandProcessor.Publish(new OrderPreparedEvent(command.OrderId));
+            });
+            return base.Handle(command);
+        }
+    }
+}

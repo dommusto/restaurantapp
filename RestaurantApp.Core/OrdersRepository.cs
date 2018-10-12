@@ -6,9 +6,11 @@ namespace RestaurantApp.Core
     public class OrdersRepository : IOrdersRepository
     {
         private readonly Dictionary<string, string> _orderStatuses;
+        private Guid id;
 
         public OrdersRepository()
         {
+            id = Guid.NewGuid();
             _orderStatuses = new Dictionary<string, string>();
         }
 

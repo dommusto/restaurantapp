@@ -4,4 +4,8 @@
     <TargetFramework>netcoreapp2.1</TargetFramework>
   </PropertyGroup>
 
+  <ItemGroup>
+    <PackageReference Include="Paramore.Brighter" Version="7.4.2" />
+  </ItemGroup>
+
 </Project>

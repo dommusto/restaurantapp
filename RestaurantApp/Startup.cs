@@ -4,7 +4,10 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Paramore.Brighter.AspNetCore;
 using RestaurantApp.Core;
+using RestaurantApp.Core.Commands;
+using RestaurantApp.EventHandlers;
 using RestaurantApp.Hubs;
 
 namespace RestaurantApp
@@ -34,6 +37,7 @@ namespace RestaurantApp
             services.AddSingleton<IPrepareOrder, Cook>();
             services.AddSingleton<IPay, Cashier>();
             services.AddSingleton<IMenuItemsRepository, MenuItemsRepository>();
+            services.AddBrighter().HandlersFromAssemblies(typeof(PrepareOrderCommand).Assembly).HandlersFromAssemblies(typeof(OrderPreparedEventHandler).Assembly);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
         }
