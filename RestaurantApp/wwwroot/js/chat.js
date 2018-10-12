@@ -3,7 +3,6 @@
 var connection = new signalR.HubConnectionBuilder().withUrl("/pushhub").build();
 
 connection.on("ReceiveMessage", function (message) {
-    alert('here');
     if (message == "EnablePayButton") {
         document.getElementById("payButton").style.visibility = "visible";
         return;

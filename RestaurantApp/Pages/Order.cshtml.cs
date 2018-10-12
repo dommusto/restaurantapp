@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Threading;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
 using Microsoft.AspNetCore.SignalR;
@@ -9,6 +11,11 @@ using RestaurantApp.Hubs;
 
 namespace RestaurantApp.Pages
 {
+    public static class stuff
+    {
+        public static IHubContext<PushHub> hubcontext { get; set; }
+    }
+
     public class OrderModel : PageModel
     {
         private readonly IHubContext<PushHub> _hubContext;
@@ -22,6 +29,7 @@ namespace RestaurantApp.Pages
         public OrderModel(IHubContext<PushHub> hubContext, IOrdersRepository ordersRepository, IAmACommandProcessor commandProcessor)
         {
             _hubContext = hubContext;
+            stuff.hubcontext = hubContext;
             _ordersRepository = ordersRepository;
             _commandProcessor = commandProcessor;
         }
@@ -30,6 +38,11 @@ namespace RestaurantApp.Pages
         {
             OrderId = orderId;
             OrderStatus = _ordersRepository.GetOrderStatus(orderId);
+            Task.Run(() =>
+            {
+                Thread.Sleep(3000);
+                _hubContext.Clients.All.SendAsync("ReceiveMessage", "test");
+            });
         }
 
         public void OnPost()

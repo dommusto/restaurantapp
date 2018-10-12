@@ -22,7 +22,7 @@ namespace RestaurantApp.Core.CommandHandlers
         {
             Task.Run(() =>
             {
-                _ordersRepository.UpdateOrderStatus(command.OrderId, "Preparing food");
+                _ordersRepository.UpdateOrderStatus(command.OrderId, "Preparing fooasdasdasdasdd");
                 Thread.Sleep(5000);
                 _commandProcessor.Publish(new OrderPreparedEvent(command.OrderId));
             });

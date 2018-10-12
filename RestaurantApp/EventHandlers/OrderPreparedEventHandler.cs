@@ -2,6 +2,7 @@
 using Paramore.Brighter;
 using RestaurantApp.Core.Events;
 using RestaurantApp.Hubs;
+using RestaurantApp.Pages;
 
 namespace RestaurantApp.EventHandlers
 {
@@ -16,8 +17,8 @@ namespace RestaurantApp.EventHandlers
 
         public override OrderPreparedEvent Handle(OrderPreparedEvent @event)
         {
-            _hubContext.Clients.All.SendAsync("ReceiveMessage", "Food ready");
-            _hubContext.Clients.All.SendAsync("ReceiveMessage", "EnablePayButton");
+            stuff.hubcontext.Clients.All.SendAsync("ReceiveMessage", "Food ready");
+            stuff.hubcontext.Clients.All.SendAsync("ReceiveMessage", "EnablePayButton");
             return base.Handle(@event);
         }
     }
