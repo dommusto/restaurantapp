@@ -6,25 +6,24 @@ using RestaurantApp.Core.Events;
 
 namespace RestaurantApp.Core.CommandHandlers
 {
-    public class PrepareOrderCommandHandler : RequestHandler<PrepareOrderCommand>
+    public class PayForOrderCommandHandler : RequestHandler<PayForOrderCommand>
     {
         private readonly IOrdersRepository _ordersRepository;
         private readonly IAmACommandProcessor _commandProcessor;
 
-        public PrepareOrderCommandHandler(IOrdersRepository ordersRepository, IAmACommandProcessor commandProcessor)
+        public PayForOrderCommandHandler(IOrdersRepository ordersRepository, IAmACommandProcessor commandProcessor)
         {
             _ordersRepository = ordersRepository;
             _commandProcessor = commandProcessor;
         }
 
-
-        public override PrepareOrderCommand Handle(PrepareOrderCommand command)
+        public override PayForOrderCommand Handle(PayForOrderCommand command)
         {
+            _ordersRepository.UpdateOrderStatus(command.OrderId, "Waiting to pay");
             Task.Run(() =>
             {
-                _ordersRepository.UpdateOrderStatus(command.OrderId, "Preparing food");
-                Thread.Sleep(5000);
-                _commandProcessor.Publish(new OrderPreparedEvent(command.OrderId));
+                Thread.Sleep(2000);
+                _commandProcessor.Publish(new OrderPaidEvent(command.OrderId));
             });
             return base.Handle(command);
         }

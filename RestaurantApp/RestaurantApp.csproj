@@ -15,10 +15,4 @@
     <ProjectReference Include="..\RestaurantApp.Core\RestaurantApp.Core.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Content Update="Pages\Order.cshtml">
-      <Pack>$(IncludeRazorContentInPack)</Pack>
-    </Content>
-  </ItemGroup>
-
 </Project>
