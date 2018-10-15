@@ -34,8 +34,6 @@ namespace RestaurantApp
             services.AddSignalR();
 
             services.AddSingleton<IOrdersRepository>(new OrdersRepository());
-            services.AddSingleton<IPrepareOrder, Cook>();
-            services.AddSingleton<IPay, Cashier>();
             services.AddSingleton<IMenuItemsRepository, MenuItemsRepository>();
             services.AddBrighter(opts=> 
                 opts.HandlerLifetime = ServiceLifetime.Singleton).HandlersFromAssemblies(typeof(PrepareOrderCommand).Assembly).HandlersFromAssemblies(typeof(OrderPreparedEventHandler).Assembly);
