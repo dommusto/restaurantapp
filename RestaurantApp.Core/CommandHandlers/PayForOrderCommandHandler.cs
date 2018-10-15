@@ -22,10 +22,15 @@ namespace RestaurantApp.Core.CommandHandlers
             _ordersRepository.UpdateOrderStatus(command.OrderId, "Waiting to pay");
             Task.Run(() =>
             {
-                Thread.Sleep(2000);
+                Pay();
                 _commandProcessor.Publish(new OrderPaidEvent(command.OrderId));
             });
             return base.Handle(command);
+        }
+
+        private static void Pay()
+        {
+            Thread.Sleep(2000);
         }
     }
 }
