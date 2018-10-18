@@ -1,10 +1,8 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using Microsoft.AspNetCore.SignalR;
 using Paramore.Brighter;
 using RestaurantApp.Core;
 using RestaurantApp.Core.Commands;
-using RestaurantApp.Hubs;
 
 namespace RestaurantApp.Pages
 {
@@ -17,9 +15,8 @@ namespace RestaurantApp.Pages
         public string OrderId { get; set; }
         public string OrderStatus { get; set; }
 
-        public OrderModel(IHubContext<PushHub> hubContext, IOrdersRepository ordersRepository, IAmACommandProcessor commandProcessor)
+        public OrderModel(IOrdersRepository ordersRepository, IAmACommandProcessor commandProcessor)
         {
-            HubContextProvider.HubContext = hubContext;
             _ordersRepository = ordersRepository;
             _commandProcessor = commandProcessor;
         }
