@@ -5,6 +5,8 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="AWSSDK.SimpleNotificationService" Version="3.3.1.15" />
+    <PackageReference Include="AWSSDK.SQS" Version="3.3.3.23" />
     <PackageReference Include="Microsoft.AspNet.SignalR" Version="2.3.0" />
     <PackageReference Include="Microsoft.AspNetCore.App" />
     <PackageReference Include="Paramore.Brighter" Version="7.4.2" />
@@ -15,6 +17,12 @@
 
   <ItemGroup>
     <ProjectReference Include="..\RestaurantApp.Core\RestaurantApp.Core.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Reference Include="Paramore.Brighter.MessagingGateway.AWSSQS">
+      <HintPath>..\lib\Paramore.Brighter.MessagingGateway.AWSSQS.dll</HintPath>
+    </Reference>
   </ItemGroup>
 
 </Project>

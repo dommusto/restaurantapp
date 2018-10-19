@@ -1,4 +1,5 @@
-﻿using System.Threading;
+﻿using System;
+using System.Threading;
 using System.Threading.Tasks;
 using Paramore.Brighter;
 using RestaurantApp.Core.Commands;
@@ -20,6 +21,7 @@ namespace RestaurantApp.Core.CommandHandlers
 
         public override PrepareOrderCommand Handle(PrepareOrderCommand command)
         {
+            throw new Exception("a");
             Task.Run(() =>
             {
                 _ordersRepository.UpdateOrderStatus(command.OrderId, "Preparing food");
