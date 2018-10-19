@@ -6,6 +6,7 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
@@ -43,18 +44,36 @@ namespace RestaurantApp
 
             services.AddSignalR();
 
-            services.AddSingleton<IOrdersRepository, OrdersRepository>();
+            services.AddSingleton<IOrdersRepository>(new OrdersRepository());
+            //services.AddSingleton<IOrdersRepository, OrdersRepository>();
             services.AddSingleton<IMenuItemsRepository, MenuItemsRepository>();
-            configure(services);
-            services.AddBrighter(opts=> 
-                opts.HandlerLifetime = ServiceLifetime.Singleton).HandlersFromAssemblies(typeof(PrepareOrderCommand).Assembly).HandlersFromAssemblies(typeof(OrderPreparedEventHandler).Assembly);
+            var actualContainer = services.BuildServiceProvider();
+            var subscriberRegistry = new SimpleHandlerRegistry1();
+            subscriberRegistry.Register<PrepareOrderCommand, PrepareOrderCommandHandler>();
+            var amAMessageMapperFactory = new SimpleMessageMapperFactory(actualContainer);
+            var messageMapperRegistry = new MessageMapperRegistry(amAMessageMapperFactory)
+            {
+                {typeof(PrepareOrderCommand), typeof(PrepareOrderCommandMessageMapper)},
+                {typeof(OrderPreparedEvent), typeof(OrderPreparentEventMapper)}
+            };
+            var basicAwsCredentials = new BasicAWSCredentials("AKIAIBZ5VBPX4KOB6E5Q", "fnj52eSwIbz5MXr6qEcjRSr27PBJ/D5bu7bs57CQ");
+            var messagingConfiguration = new MessagingConfiguration(new InMemoryMessageStore(), new SqsMessageProducer(basicAwsCredentials, RegionEndpoint.USWest2), messageMapperRegistry);
+             services.AddBrighter(opts =>
+            {
+
+                opts.HandlerLifetime = ServiceLifetime.Singleton;
+                opts.MessagingConfiguration = messagingConfiguration;
+            }).HandlersFromAssemblies(typeof(PrepareOrderCommand).Assembly).HandlersFromAssemblies(typeof(OrderPreparedEventHandler).Assembly);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
+            var container = services.BuildServiceProvider();
+            configure((IAmACommandProcessor)container.GetService(typeof(IAmACommandProcessor)), messageMapperRegistry, basicAwsCredentials);
 
         }
 
-        private void configure(IServiceCollection services)
+        private void configure(IAmACommandProcessor commandProcessor, MessageMapperRegistry messageMapperRegistry,
+            BasicAWSCredentials basicAwsCredentials)
         {
-            var actualContainer = services.BuildServiceProvider();
+            /*var actualContainer = services.BuildServiceProvider();
             var subscriberRegistry = new SimpleHandlerRegistry(services);
             subscriberRegistry.Register<PrepareOrderCommand, PrepareOrderCommandHandler>();
             var amAMessageMapperFactory = new SimpleMessageMapperFactory(actualContainer);
@@ -67,19 +86,25 @@ namespace RestaurantApp
                 .TaskQueues(new MessagingConfiguration(new InMemoryMessageStore(), new SqsMessageProducer(basicAwsCredentials, RegionEndpoint.USWest2), messageMapperRegistry))
                 .RequestContextFactory(new InMemoryRequestContextFactory())
                 .Build();
+*/
 
-            commandProcessor.Post(new PrepareOrderCommand("someorderid"));
+            //commandProcessor.Post(new PrepareOrderCommand("someorderid"));
             var dispatcher = DispatchBuilder.With()
                 .CommandProcessor(commandProcessor)
                 .MessageMappers(messageMapperRegistry)
                 .DefaultChannelFactory(new InputChannelFactory(new SqsMessageConsumerFactory(basicAwsCredentials, RegionEndpoint.USWest2)))
                 .Connections(new List<Connection>()
                 {
-                    new Connection<PrepareOrderCommand>(
+                    new Connection<OrderPreparedEvent>(
                         new ConnectionName("Connection1"), 
+                        new ChannelName("https://sqs.us-west-2.amazonaws.com/058052576087/OrderPreparedEvent"),
+                        new RoutingKey("OrderPreparentEvent")
+                        ),
+                    /*new Connection<PrepareOrderCommand>(
+                        new ConnectionName("Connection2"),
                         new ChannelName("https://sqs.us-west-2.amazonaws.com/058052576087/testqueue"),
-                        new RoutingKey("PrepareOrderCommand")
-                        )
+                        new RoutingKey("testtopic")
+                    )*/
                 })
                 .Build();
 
@@ -99,22 +124,39 @@ namespace RestaurantApp
 
             public PrepareOrderCommand MapToRequest(Message message)
             {
+                return new PrepareOrderCommand("something");
                 return JsonConvert.DeserializeObject<PrepareOrderCommand>(message.Body.Value);
             }
         }
 
-        public class SimpleHandlerFactory : IAmAHandlerFactory
+        public class OrderPreparentEventMapper : IAmAMessageMapper<OrderPreparedEvent>
+        {
+            public Message MapToMessage(OrderPreparedEvent request)
+            {
+                var header = new MessageHeader(messageId: request.Id, topic: "OrderPreparedEvent", messageType: MessageType.MT_EVENT);
+                var body = new MessageBody(JsonConvert.SerializeObject(request));
+                var message = new Message(header, body);
+                return message;
+            }
+
+            public OrderPreparedEvent MapToRequest(Message message)
+            {
+                return JsonConvert.DeserializeObject<OrderPreparedEvent>(message.Body.Value);
+            }
+        }
+
+        public class SimpleHandlerFactory1 : IAmAHandlerFactory
         {
             private readonly IServiceProvider _container;
 
-            public SimpleHandlerFactory(IServiceProvider container)
+            public SimpleHandlerFactory1(IServiceProvider container)
             {
                 _container = container;
             }
 
             public IHandleRequests Create(Type handlerType)
             {
-                return new PrepareOrderCommandHandler(new OrdersRepository(), null);
+                //return new PrepareOrderCommandHandler(new OrdersRepository(), null);
                 return _container.GetService(handlerType) as IHandleRequests;
             }
 
@@ -132,20 +174,28 @@ namespace RestaurantApp
 
             public IAmAMessageMapper Create(Type messageMapperType)
             {
-                return new PrepareOrderCommandMessageMapper();
+                if (messageMapperType == typeof(PrepareOrderCommandMessageMapper))
+                {
+                    return new PrepareOrderCommandMessageMapper();
+
+                }
+                else
+                {
+                    return new OrderPreparentEventMapper();
+                }
+                
                 return (IAmAMessageMapper)_container.GetService(messageMapperType);
             }
         }
 
-        public class SimpleHandlerRegistry : IAmASubscriberRegistry
+        public class SimpleHandlerRegistry1 : IAmASubscriberRegistry
         {
-            private readonly IServiceCollection _container;
             private readonly IAmASubscriberRegistry _subscriberRegistry;
 
-            public SimpleHandlerRegistry(IServiceCollection container)
+            public SimpleHandlerRegistry1()
             {
                 _subscriberRegistry = new SubscriberRegistry();
-                _container = container;
+               
             }
 
             public IEnumerable<Type> Get<T>() where T : class, IRequest
@@ -155,7 +205,7 @@ namespace RestaurantApp
 
             public void Register<TRequest, TImplementation>() where TRequest : class, IRequest where TImplementation : class, IHandleRequests<TRequest>
             {
-                _container.AddTransient<TImplementation>(); // register the command handler in the unity container
+                //_container.AddTransient<TImplementation>(); // register the command handler in the unity container
                 _subscriberRegistry.Register<TRequest, TImplementation>();
             }
         }

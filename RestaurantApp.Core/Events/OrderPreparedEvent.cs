@@ -13,6 +13,11 @@ namespace RestaurantApp.Core.Events
             Id = Guid.NewGuid();
         }
 
+        public OrderPreparedEvent()
+        {
+
+        }
+
         public Guid Id { get; set; }
     }
 }
