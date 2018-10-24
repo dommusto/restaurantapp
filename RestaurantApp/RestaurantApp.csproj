@@ -11,6 +11,8 @@
     <PackageReference Include="Paramore.Brighter.Extensions.DependencyInjection" Version="1.0.3" />
     <PackageReference Include="Paramore.Brighter.MessagingGateway.AzureServiceBus" Version="7.4.2" />
     <PackageReference Include="Paramore.Brighter.ServiceActivator" Version="7.4.2" />
+    <PackageReference Include="Paramore.Darker" Version="1.1.0" />
+    <PackageReference Include="Paramore.Darker.AspNetCore" Version="1.1.2" />
   </ItemGroup>
 
   <ItemGroup>

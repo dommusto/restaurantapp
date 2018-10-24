@@ -5,8 +5,10 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Paramore.Brighter.Extensions.DependencyInjection;
+using Paramore.Darker.AspNetCore;
 using RestaurantApp.Core;
 using RestaurantApp.Core.Commands;
+using RestaurantApp.Core.QueryHandlers;
 using RestaurantApp.EventHandlers;
 using RestaurantApp.Hubs;
 
@@ -33,40 +35,14 @@ namespace RestaurantApp
 
             services.AddSignalR();
 
-            services.AddSingleton<IOrdersRepository, OrdersRepository>();
+            services.AddSingleton<IOrdersRepository>(new OrdersRepository());
             services.AddSingleton<IMenuItemsRepository, MenuItemsRepository>();
-            services.AddBrighter(opts=> 
-                opts.HandlerLifetime = ServiceLifetime.Singleton).HandlersFromAssemblies(typeof(PrepareOrderCommand).Assembly).HandlersFromAssemblies(typeof(OrderPreparedEventHandler).Assembly);
+            services.AddBrighter(opts=> opts.HandlerLifetime = ServiceLifetime.Singleton).HandlersFromAssemblies(typeof(PrepareOrderCommand).Assembly).HandlersFromAssemblies(typeof(OrderPreparedEventHandler).Assembly);
+            // Add Darker and some extensions.
+            services.AddDarker()
+                .AddHandlersFromAssemblies(typeof(GetMenuItemsQueryHandler).Assembly);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
-        }
-
-        private void configure()
-        {
-            /*var dispatcher = DispatchBuilder.With()
-                .CommandProcessor(CommandProcessorBuilder.With()
-                    .Handlers(new HandlerConfiguration(subscriberRegistry, handlerFactory))
-                    .Policies(policyRegistry)
-                    .NoTaskQueues()
-                    .RequestContextFactory(new InMemoryRequestContextFactory())
-                    .Build())
-                .MessageMappers(messageMapperRegistry)
-                .ChannelFactory(new InputChannelFactory(rmqMessageConsumerFactory))
-                .Connections(connections)
-                .Build();
-
-
-            var dispatcher = DispatchBuilder.With()
-                .CommandProcessor(CommandProcessorBuilder.With()
-                    .Handlers(new HandlerConfiguration(subscriberRegistry, handlerFactory))
-                    .Policies(policyRegistry)
-                    .NoTaskQueues()
-                    .RequestContextFactory(new InMemoryRequestContextFactory())
-                    .Build())
-                .MessageMappers(messageMapperRegistry)
-                .ChannelFactory(new InputChannelFactory(rmqMessageConsumerFactory))
-                .Connections(connections)
-                .Build();*/
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
