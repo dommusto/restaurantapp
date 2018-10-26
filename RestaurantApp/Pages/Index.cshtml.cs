@@ -15,7 +15,7 @@ namespace RestaurantApp.Pages
         public List<string> MenuItems { get; set; }
         [BindProperty]
         public string SelectedMenuItem { get; set; }
-
+        
         public IndexModel(IQueryProcessor queryProcessor, IAmACommandProcessor commandProcessor)
         {
             _queryProcessor = queryProcessor;
