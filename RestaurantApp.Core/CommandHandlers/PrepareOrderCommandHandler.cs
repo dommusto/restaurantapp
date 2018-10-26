@@ -8,21 +8,18 @@ namespace RestaurantApp.Core.CommandHandlers
 {
     public class PrepareOrderCommandHandler : RequestHandler<PrepareOrderCommand>
     {
-        private readonly IOrdersRepository _ordersRepository;
         private readonly IAmACommandProcessor _commandProcessor;
 
-        public PrepareOrderCommandHandler(IOrdersRepository ordersRepository, IAmACommandProcessor commandProcessor)
+        public PrepareOrderCommandHandler(IAmACommandProcessor commandProcessor)
         {
-            _ordersRepository = ordersRepository;
             _commandProcessor = commandProcessor;
         }
-
 
         public override PrepareOrderCommand Handle(PrepareOrderCommand command)
         {
             Task.Run(() =>
             {
-                _ordersRepository.UpdateOrderStatus(command.OrderId, "Preparing food");
+                _commandProcessor.Publish(new OrderPickedUpByCookerEvent(command.OrderId));
                 PrepareOrder();
                 _commandProcessor.Publish(new OrderPreparedEvent(command.OrderId));
             });
