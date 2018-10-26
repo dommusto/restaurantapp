@@ -6,18 +6,18 @@ using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
-using Microsoft.CodeAnalysis.CSharp.Syntax;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft.Json;
 using Paramore.Brighter;
 using Paramore.Brighter.Extensions.DependencyInjection;
 using Paramore.Brighter.MessagingGateway.AWSSQS;
+using Paramore.Darker.AspNetCore;
 using Paramore.Brighter.ServiceActivator;
 using RestaurantApp.Core;
-using RestaurantApp.Core.CommandHandlers;
 using RestaurantApp.Core.Commands;
 using RestaurantApp.Core.Events;
+using RestaurantApp.Core.QueryHandlers;
 using RestaurantApp.EventHandlers;
 using RestaurantApp.Hubs;
 
@@ -45,11 +45,8 @@ namespace RestaurantApp
             services.AddSignalR();
 
             services.AddSingleton<IOrdersRepository>(new OrdersRepository());
-            //services.AddSingleton<IOrdersRepository, OrdersRepository>();
             services.AddSingleton<IMenuItemsRepository, MenuItemsRepository>();
             var actualContainer = services.BuildServiceProvider();
-            var subscriberRegistry = new SimpleHandlerRegistry1();
-            subscriberRegistry.Register<PrepareOrderCommand, PrepareOrderCommandHandler>();
             var amAMessageMapperFactory = new SimpleMessageMapperFactory(actualContainer);
             var messageMapperRegistry = new MessageMapperRegistry(amAMessageMapperFactory)
             {
@@ -58,37 +55,21 @@ namespace RestaurantApp
             };
             var basicAwsCredentials = new BasicAWSCredentials("AKIAIBZ5VBPX4KOB6E5Q", "fnj52eSwIbz5MXr6qEcjRSr27PBJ/D5bu7bs57CQ");
             var messagingConfiguration = new MessagingConfiguration(new InMemoryMessageStore(), new SqsMessageProducer(basicAwsCredentials, RegionEndpoint.USWest2), messageMapperRegistry);
-             services.AddBrighter(opts =>
+            services.AddBrighter(opts =>
             {
 
                 opts.HandlerLifetime = ServiceLifetime.Singleton;
                 opts.MessagingConfiguration = messagingConfiguration;
             }).HandlersFromAssemblies(typeof(PrepareOrderCommand).Assembly).HandlersFromAssemblies(typeof(OrderPreparedEventHandler).Assembly);
+            services.AddDarker().AddHandlersFromAssemblies(typeof(GetMenuItemsQueryHandler).Assembly);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
             var container = services.BuildServiceProvider();
             configure((IAmACommandProcessor)container.GetService(typeof(IAmACommandProcessor)), messageMapperRegistry, basicAwsCredentials);
 
         }
 
-        private void configure(IAmACommandProcessor commandProcessor, MessageMapperRegistry messageMapperRegistry,
-            BasicAWSCredentials basicAwsCredentials)
+        private void configure(IAmACommandProcessor commandProcessor, MessageMapperRegistry messageMapperRegistry, BasicAWSCredentials basicAwsCredentials)
         {
-            /*var actualContainer = services.BuildServiceProvider();
-            var subscriberRegistry = new SimpleHandlerRegistry(services);
-            subscriberRegistry.Register<PrepareOrderCommand, PrepareOrderCommandHandler>();
-            var amAMessageMapperFactory = new SimpleMessageMapperFactory(actualContainer);
-            var messageMapperRegistry = new MessageMapperRegistry(amAMessageMapperFactory);
-            messageMapperRegistry.Add(typeof(PrepareOrderCommand), typeof(PrepareOrderCommandMessageMapper));
-            var basicAwsCredentials = new BasicAWSCredentials("AKIAIBZ5VBPX4KOB6E5Q", "fnj52eSwIbz5MXr6qEcjRSr27PBJ/D5bu7bs57CQ");
-            var commandProcessor = CommandProcessorBuilder.With()
-                .Handlers(new HandlerConfiguration(subscriberRegistry, new SimpleHandlerFactory(actualContainer)))
-                .DefaultPolicy()
-                .TaskQueues(new MessagingConfiguration(new InMemoryMessageStore(), new SqsMessageProducer(basicAwsCredentials, RegionEndpoint.USWest2), messageMapperRegistry))
-                .RequestContextFactory(new InMemoryRequestContextFactory())
-                .Build();
-*/
-
-            //commandProcessor.Post(new PrepareOrderCommand("someorderid"));
             var dispatcher = DispatchBuilder.With()
                 .CommandProcessor(commandProcessor)
                 .MessageMappers(messageMapperRegistry)
@@ -96,15 +77,10 @@ namespace RestaurantApp
                 .Connections(new List<Connection>()
                 {
                     new Connection<OrderPreparedEvent>(
-                        new ConnectionName("Connection1"), 
+                        new ConnectionName("Connection1"),
                         new ChannelName("https://sqs.us-west-2.amazonaws.com/058052576087/OrderPreparedEvent"),
                         new RoutingKey("OrderPreparentEvent")
-                        ),
-                    /*new Connection<PrepareOrderCommand>(
-                        new ConnectionName("Connection2"),
-                        new ChannelName("https://sqs.us-west-2.amazonaws.com/058052576087/testqueue"),
-                        new RoutingKey("testtopic")
-                    )*/
+                        )
                 })
                 .Build();
 
@@ -116,7 +92,7 @@ namespace RestaurantApp
         {
             public Message MapToMessage(PrepareOrderCommand request)
             {
-                var header = new MessageHeader(messageId: request.Id, topic: "testtopic", messageType: MessageType.MT_EVENT);
+                var header = new MessageHeader(messageId: request.Id, topic: "PrepareOrderCommand", messageType: MessageType.MT_EVENT);
                 var body = new MessageBody(JsonConvert.SerializeObject(request));
                 var message = new Message(header, body);
                 return message;
@@ -124,7 +100,6 @@ namespace RestaurantApp
 
             public PrepareOrderCommand MapToRequest(Message message)
             {
-                return new PrepareOrderCommand("something");
                 return JsonConvert.DeserializeObject<PrepareOrderCommand>(message.Body.Value);
             }
         }
@@ -143,24 +118,6 @@ namespace RestaurantApp
             {
                 return JsonConvert.DeserializeObject<OrderPreparedEvent>(message.Body.Value);
             }
-        }
-
-        public class SimpleHandlerFactory1 : IAmAHandlerFactory
-        {
-            private readonly IServiceProvider _container;
-
-            public SimpleHandlerFactory1(IServiceProvider container)
-            {
-                _container = container;
-            }
-
-            public IHandleRequests Create(Type handlerType)
-            {
-                //return new PrepareOrderCommandHandler(new OrdersRepository(), null);
-                return _container.GetService(handlerType) as IHandleRequests;
-            }
-
-            public void Release(IHandleRequests handler) { }
         }
 
         public class SimpleMessageMapperFactory : IAmAMessageMapperFactory
@@ -183,7 +140,7 @@ namespace RestaurantApp
                 {
                     return new OrderPreparentEventMapper();
                 }
-                
+
                 return (IAmAMessageMapper)_container.GetService(messageMapperType);
             }
         }
@@ -195,7 +152,7 @@ namespace RestaurantApp
             public SimpleHandlerRegistry1()
             {
                 _subscriberRegistry = new SubscriberRegistry();
-               
+
             }
 
             public IEnumerable<Type> Get<T>() where T : class, IRequest

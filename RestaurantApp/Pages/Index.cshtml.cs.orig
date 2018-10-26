@@ -30,10 +30,15 @@ namespace RestaurantApp.Pages
 
         public IActionResult OnPost()
         {
+<<<<<<< HEAD
+            var orderId = _ordersRepository.AddOrder(SelectedMenuItem);
+            _commandProcessor.Post(new PrepareOrderCommand(orderId));
+=======
             var addOrderCommand = new AddOrderCommand(SelectedMenuItem);
              _commandProcessor.Send(addOrderCommand);
             var orderId = addOrderCommand.OrderId;
-            _commandProcessor.Post(new PrepareOrderCommand(orderId));
+            _commandProcessor.Send(new PrepareOrderCommand(orderId));
+>>>>>>> v4
             return RedirectToPage("Order", "OnGet", new { orderId });
         }
     }

@@ -6,6 +6,7 @@
 
   <ItemGroup>
     <PackageReference Include="Paramore.Brighter" Version="7.4.2" />
+    <PackageReference Include="Paramore.Darker" Version="1.1.0" />
   </ItemGroup>
 
 </Project>
