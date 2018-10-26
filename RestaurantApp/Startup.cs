@@ -51,9 +51,10 @@ namespace RestaurantApp
             var messageMapperRegistry = new MessageMapperRegistry(amAMessageMapperFactory)
             {
                 {typeof(PrepareOrderCommand), typeof(PrepareOrderCommandMessageMapper)},
-                {typeof(OrderPreparedEvent), typeof(OrderPreparentEventMapper)}
+                {typeof(OrderPreparedEvent), typeof(OrderPreparentEventMapper)},
+                {typeof(OrderPickedUpByCookerEvent), typeof(OrderPickedUpByCookerEventMapper)},
             };
-            var basicAwsCredentials = new BasicAWSCredentials("AKIAIBZ5VBPX4KOB6E5Q", "fnj52eSwIbz5MXr6qEcjRSr27PBJ/D5bu7bs57CQ");
+            var basicAwsCredentials = null as BasicAWSCredentials;
             var messagingConfiguration = new MessagingConfiguration(new InMemoryMessageStore(), new SqsMessageProducer(basicAwsCredentials, RegionEndpoint.USWest2), messageMapperRegistry);
             services.AddBrighter(opts =>
             {
@@ -76,8 +77,13 @@ namespace RestaurantApp
                 .DefaultChannelFactory(new InputChannelFactory(new SqsMessageConsumerFactory(basicAwsCredentials, RegionEndpoint.USWest2)))
                 .Connections(new List<Connection>()
                 {
+                    new Connection<OrderPickedUpByCookerEvent>(
+                        new ConnectionName("OrderPickedUpByCookerEvent"),
+                        new ChannelName("https://sqs.us-west-2.amazonaws.com/058052576087/OrderPickedUpByCookerEvent"),
+                        new RoutingKey("OrderPickedUpByCookerEvent")
+                    ),
                     new Connection<OrderPreparedEvent>(
-                        new ConnectionName("Connection1"),
+                        new ConnectionName("OrderPreparedEvent"),
                         new ChannelName("https://sqs.us-west-2.amazonaws.com/058052576087/OrderPreparedEvent"),
                         new RoutingKey("OrderPreparentEvent")
                         )
@@ -120,6 +126,22 @@ namespace RestaurantApp
             }
         }
 
+        public class OrderPickedUpByCookerEventMapper : IAmAMessageMapper<OrderPickedUpByCookerEvent>
+        {
+            public Message MapToMessage(OrderPickedUpByCookerEvent request)
+            {
+                var header = new MessageHeader(messageId: request.Id, topic: "OrderPickedUpByCookerEvent", messageType: MessageType.MT_EVENT);
+                var body = new MessageBody(JsonConvert.SerializeObject(request));
+                var message = new Message(header, body);
+                return message;
+            }
+
+            public OrderPickedUpByCookerEvent MapToRequest(Message message)
+            {
+                return JsonConvert.DeserializeObject<OrderPickedUpByCookerEvent>(message.Body.Value);
+            }
+        }
+
         public class SimpleMessageMapperFactory : IAmAMessageMapperFactory
         {
             private readonly IServiceProvider _container;
@@ -136,10 +158,12 @@ namespace RestaurantApp
                     return new PrepareOrderCommandMessageMapper();
 
                 }
-                else
+                else if(messageMapperType == typeof(OrderPreparentEventMapper))
                 {
                     return new OrderPreparentEventMapper();
                 }
+
+                return new OrderPickedUpByCookerEventMapper();
 
                 return (IAmAMessageMapper)_container.GetService(messageMapperType);
             }
