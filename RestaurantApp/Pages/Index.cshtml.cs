@@ -9,16 +9,14 @@ namespace RestaurantApp.Pages
 {
     public class IndexModel : PageModel
     {
-        private readonly IOrdersRepository _ordersRepository;
         private readonly IMenuItemsRepository _menuMenuItemsRepository;
         private readonly IAmACommandProcessor _commandProcessor;
         public List<string> MenuItems { get; set; }
         [BindProperty]
         public string SelectedMenuItem { get; set; }
 
-        public IndexModel(IOrdersRepository ordersRepository, IMenuItemsRepository menuMenuItemsRepository, IAmACommandProcessor commandProcessor)
+        public IndexModel(IMenuItemsRepository menuMenuItemsRepository, IAmACommandProcessor commandProcessor)
         {
-            _ordersRepository = ordersRepository;
             _menuMenuItemsRepository = menuMenuItemsRepository;
             _commandProcessor = commandProcessor;
             MenuItems = new List<string>();
@@ -31,7 +29,9 @@ namespace RestaurantApp.Pages
 
         public IActionResult OnPost()
         {
-            var orderId = _ordersRepository.AddOrder(SelectedMenuItem);
+            var addOrderCommand = new AddOrderCommand(SelectedMenuItem);
+            _commandProcessor.Send(addOrderCommand);
+            var orderId = addOrderCommand.OrderId;
             _commandProcessor.Send(new PrepareOrderCommand(orderId));
             return RedirectToPage("Order", "OnGet", new { orderId });
         }
