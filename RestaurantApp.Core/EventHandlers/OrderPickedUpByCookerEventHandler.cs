@@ -1,5 +1,4 @@
 ﻿using Paramore.Brighter;
-using RestaurantApp.Core.Commands;
 using RestaurantApp.Core.Events;
 
 namespace RestaurantApp.Core.EventHandlers
