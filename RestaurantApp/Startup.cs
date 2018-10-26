@@ -53,7 +53,7 @@ namespace RestaurantApp
                 {typeof(PrepareOrderCommand), typeof(PrepareOrderCommandMessageMapper)},
                 {typeof(OrderPreparedEvent), typeof(OrderPreparentEventMapper)}
             };
-            var basicAwsCredentials = new BasicAWSCredentials("AKIAIBZ5VBPX4KOB6E5Q", "fnj52eSwIbz5MXr6qEcjRSr27PBJ/D5bu7bs57CQ");
+            var basicAwsCredentials = null as BasicAWSCredentials;
             var messagingConfiguration = new MessagingConfiguration(new InMemoryMessageStore(), new SqsMessageProducer(basicAwsCredentials, RegionEndpoint.USWest2), messageMapperRegistry);
             services.AddBrighter(opts =>
             {
