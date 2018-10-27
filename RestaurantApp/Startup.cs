@@ -46,6 +46,9 @@ namespace RestaurantApp
 
             services.AddSingleton<IOrdersRepository>(new OrdersRepository());
             services.AddSingleton<IMenuItemsRepository, MenuItemsRepository>();
+            services.AddSingleton(new PrepareOrderCommandMessageMapper());
+            services.AddSingleton(new OrderPreparentEventMapper());
+            services.AddSingleton(new OrderPickedUpByCookerEventMapper());
             var actualContainer = services.BuildServiceProvider();
             var amAMessageMapperFactory = new SimpleMessageMapperFactory(actualContainer);
             var messageMapperRegistry = new MessageMapperRegistry(amAMessageMapperFactory)
@@ -54,6 +57,8 @@ namespace RestaurantApp
                 {typeof(OrderPreparedEvent), typeof(OrderPreparentEventMapper)},
                 {typeof(OrderPickedUpByCookerEvent), typeof(OrderPickedUpByCookerEventMapper)},
             };
+            
+            
             var basicAwsCredentials = new BasicAWSCredentials("AKIAILSOA4BG5TVAGMVQ", "Wch10UHsC+PaONVh1oj5UH9mBh/em8g0zajBO6ql");
             var messagingConfiguration = new MessagingConfiguration(new InMemoryMessageStore(), new SqsMessageProducer(basicAwsCredentials, RegionEndpoint.USWest2), messageMapperRegistry);
             services.AddBrighter(opts =>
@@ -61,7 +66,7 @@ namespace RestaurantApp
 
                 opts.HandlerLifetime = ServiceLifetime.Singleton;
                 opts.MessagingConfiguration = messagingConfiguration;
-            }).HandlersFromAssemblies(typeof(PrepareOrderCommand).Assembly).HandlersFromAssemblies(typeof(OrderPreparedEventHandler).Assembly);
+            }).HandlersFromAssemblies(typeof(PrepareOrderCommand).Assembly).HandlersFromAssemblies(typeof(OrderStatusUpdatedEventHandler).Assembly);
             services.AddDarker().AddHandlersFromAssemblies(typeof(GetMenuItemsQueryHandler).Assembly);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
             var container = services.BuildServiceProvider();
@@ -105,7 +110,7 @@ namespace RestaurantApp
 
             public IAmAMessageMapper Create(Type messageMapperType)
             {
-                if (messageMapperType == typeof(PrepareOrderCommandMessageMapper))
+                /*if (messageMapperType == typeof(PrepareOrderCommandMessageMapper))
                 {
                     return new PrepareOrderCommandMessageMapper();
 
@@ -115,7 +120,7 @@ namespace RestaurantApp
                     return new OrderPreparentEventMapper();
                 }
 
-                return new OrderPickedUpByCookerEventMapper();
+                return new OrderPickedUpByCookerEventMapper();*/
 
                 return (IAmAMessageMapper)_container.GetService(messageMapperType);
             }
