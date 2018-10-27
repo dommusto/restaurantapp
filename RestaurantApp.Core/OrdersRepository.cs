@@ -5,6 +5,7 @@ namespace RestaurantApp.Core
     public class OrdersRepository : IOrdersRepository
     {
         private string _orderStatus;
+        private readonly object _lockObject = new object();
         private Guid id;
 
         public OrdersRepository()
@@ -14,9 +15,12 @@ namespace RestaurantApp.Core
 
         public string AddOrder(string menuItem)
         {
-            var orderId = Guid.NewGuid().ToString();
-            _orderStatus = "Started";
-            return orderId;
+            lock (_lockObject)
+            {
+                var orderId = Guid.NewGuid().ToString();
+                _orderStatus = "Started";
+                return orderId;
+            }
         }
 
         public string GetOrderStatus(string orderId)
@@ -26,7 +30,10 @@ namespace RestaurantApp.Core
 
         public void UpdateOrderStatus(string orderId, string status)
         {
-            _orderStatus = status;
+            lock (_lockObject)
+            {
+                _orderStatus = status;
+            }
         }
     }
 }
