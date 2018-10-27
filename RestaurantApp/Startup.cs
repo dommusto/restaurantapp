@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using Amazon;
 using Amazon.Runtime;
@@ -97,57 +96,7 @@ namespace RestaurantApp
 
             dispatcher.Receive();
         }
-
-
-        public class SimpleMessageMapperFactory : IAmAMessageMapperFactory
-        {
-            private readonly IServiceProvider _container;
-
-            public SimpleMessageMapperFactory(IServiceProvider container)
-            {
-                _container = container;
-            }
-
-            public IAmAMessageMapper Create(Type messageMapperType)
-            {
-                /*if (messageMapperType == typeof(PrepareOrderCommandMessageMapper))
-                {
-                    return new PrepareOrderCommandMessageMapper();
-
-                }
-                else if(messageMapperType == typeof(OrderPreparentEventMapper))
-                {
-                    return new OrderPreparentEventMapper();
-                }
-
-                return new OrderPickedUpByCookerEventMapper();*/
-
-                return (IAmAMessageMapper)_container.GetService(messageMapperType);
-            }
-        }
-
-        public class SimpleHandlerRegistry1 : IAmASubscriberRegistry
-        {
-            private readonly IAmASubscriberRegistry _subscriberRegistry;
-
-            public SimpleHandlerRegistry1()
-            {
-                _subscriberRegistry = new SubscriberRegistry();
-
-            }
-
-            public IEnumerable<Type> Get<T>() where T : class, IRequest
-            {
-                return _subscriberRegistry.Get<T>();
-            }
-
-            public void Register<TRequest, TImplementation>() where TRequest : class, IRequest where TImplementation : class, IHandleRequests<TRequest>
-            {
-                //_container.AddTransient<TImplementation>(); // register the command handler in the unity container
-                _subscriberRegistry.Register<TRequest, TImplementation>();
-            }
-        }
-
+        
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
