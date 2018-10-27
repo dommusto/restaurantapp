@@ -22,6 +22,7 @@ exports.handler = function(event, context) {
     MessageBody: order_picked_up_by_cooker_event_json,
     QueueUrl: ORDER_PICKED_UP_BY_COOKER_EVENT_QUEUE_URL
   };
+  console.log('sending OrderPickedUpByCookerEvent');
   sqs.sendMessage(params, function(err,data){
     if(err) {
       console.log('error:',"Fail Send Message" + err);
@@ -50,6 +51,7 @@ exports.handler = function(event, context) {
     MessageBody: order_prepared_event_json,
     QueueUrl: ORDER_PREPARED_EVENT_QUEUE_URL
   };
+  console.log('sending OrderPreparedEvent');
   sqs.sendMessage(params, function(err,data){
     if(err) {
       console.log('error:',"Fail Send Message" + err);

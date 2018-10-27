@@ -57,9 +57,8 @@ namespace RestaurantApp
                 {typeof(OrderPickedUpByCookerEvent), typeof(OrderPickedUpByCookerEventMapper)},
             };
             
-            
-            var basicAwsCredentials = new BasicAWSCredentials("AKIAILSOA4BG5TVAGMVQ", "Wch10UHsC+PaONVh1oj5UH9mBh/em8g0zajBO6ql");
-            var messagingConfiguration = new MessagingConfiguration(new InMemoryMessageStore(), new SqsMessageProducer(basicAwsCredentials, RegionEndpoint.USWest2), messageMapperRegistry);
+            var awsCredentials = new StoredProfileAWSCredentials("default");
+            var messagingConfiguration = new MessagingConfiguration(new InMemoryMessageStore(), new SqsMessageProducer(awsCredentials, RegionEndpoint.USWest2), messageMapperRegistry);
             services.AddBrighter(opts =>
             {
 
@@ -69,11 +68,11 @@ namespace RestaurantApp
             services.AddDarker().AddHandlersFromAssemblies(typeof(GetMenuItemsQueryHandler).Assembly);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
             var container = services.BuildServiceProvider();
-            ConfigureDispatcher((IAmACommandProcessor)container.GetService(typeof(IAmACommandProcessor)), messageMapperRegistry, basicAwsCredentials);
+            ConfigureDispatcher((IAmACommandProcessor)container.GetService(typeof(IAmACommandProcessor)), messageMapperRegistry, awsCredentials);
 
         }
 
-        private void ConfigureDispatcher(IAmACommandProcessor commandProcessor, MessageMapperRegistry messageMapperRegistry, BasicAWSCredentials basicAwsCredentials)
+        private void ConfigureDispatcher(IAmACommandProcessor commandProcessor, MessageMapperRegistry messageMapperRegistry, AWSCredentials basicAwsCredentials)
         {
             var dispatcher = DispatchBuilder.With()
                 .CommandProcessor(commandProcessor)
