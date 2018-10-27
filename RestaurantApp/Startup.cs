@@ -8,7 +8,6 @@ using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
-using Newtonsoft.Json;
 using Paramore.Brighter;
 using Paramore.Brighter.Extensions.DependencyInjection;
 using Paramore.Brighter.MessagingGateway.AWSSQS;
@@ -17,6 +16,7 @@ using Paramore.Brighter.ServiceActivator;
 using RestaurantApp.Core;
 using RestaurantApp.Core.Commands;
 using RestaurantApp.Core.Events;
+using RestaurantApp.Core.Mappers;
 using RestaurantApp.Core.QueryHandlers;
 using RestaurantApp.EventHandlers;
 using RestaurantApp.Hubs;
@@ -54,7 +54,7 @@ namespace RestaurantApp
                 {typeof(OrderPreparedEvent), typeof(OrderPreparentEventMapper)},
                 {typeof(OrderPickedUpByCookerEvent), typeof(OrderPickedUpByCookerEventMapper)},
             };
-            var basicAwsCredentials = null as BasicAWSCredentials;
+            var basicAwsCredentials = new BasicAWSCredentials("AKIAILSOA4BG5TVAGMVQ", "Wch10UHsC+PaONVh1oj5UH9mBh/em8g0zajBO6ql");
             var messagingConfiguration = new MessagingConfiguration(new InMemoryMessageStore(), new SqsMessageProducer(basicAwsCredentials, RegionEndpoint.USWest2), messageMapperRegistry);
             services.AddBrighter(opts =>
             {
@@ -65,11 +65,11 @@ namespace RestaurantApp
             services.AddDarker().AddHandlersFromAssemblies(typeof(GetMenuItemsQueryHandler).Assembly);
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
             var container = services.BuildServiceProvider();
-            configure((IAmACommandProcessor)container.GetService(typeof(IAmACommandProcessor)), messageMapperRegistry, basicAwsCredentials);
+            ConfigureDispatcher((IAmACommandProcessor)container.GetService(typeof(IAmACommandProcessor)), messageMapperRegistry, basicAwsCredentials);
 
         }
 
-        private void configure(IAmACommandProcessor commandProcessor, MessageMapperRegistry messageMapperRegistry, BasicAWSCredentials basicAwsCredentials)
+        private void ConfigureDispatcher(IAmACommandProcessor commandProcessor, MessageMapperRegistry messageMapperRegistry, BasicAWSCredentials basicAwsCredentials)
         {
             var dispatcher = DispatchBuilder.With()
                 .CommandProcessor(commandProcessor)
@@ -93,54 +93,6 @@ namespace RestaurantApp
             dispatcher.Receive();
         }
 
-
-        public class PrepareOrderCommandMessageMapper : IAmAMessageMapper<PrepareOrderCommand>
-        {
-            public Message MapToMessage(PrepareOrderCommand request)
-            {
-                var header = new MessageHeader(messageId: request.Id, topic: "PrepareOrderCommand", messageType: MessageType.MT_EVENT);
-                var body = new MessageBody(JsonConvert.SerializeObject(request));
-                var message = new Message(header, body);
-                return message;
-            }
-
-            public PrepareOrderCommand MapToRequest(Message message)
-            {
-                return JsonConvert.DeserializeObject<PrepareOrderCommand>(message.Body.Value);
-            }
-        }
-
-        public class OrderPreparentEventMapper : IAmAMessageMapper<OrderPreparedEvent>
-        {
-            public Message MapToMessage(OrderPreparedEvent request)
-            {
-                var header = new MessageHeader(messageId: request.Id, topic: "OrderPreparedEvent", messageType: MessageType.MT_EVENT);
-                var body = new MessageBody(JsonConvert.SerializeObject(request));
-                var message = new Message(header, body);
-                return message;
-            }
-
-            public OrderPreparedEvent MapToRequest(Message message)
-            {
-                return JsonConvert.DeserializeObject<OrderPreparedEvent>(message.Body.Value);
-            }
-        }
-
-        public class OrderPickedUpByCookerEventMapper : IAmAMessageMapper<OrderPickedUpByCookerEvent>
-        {
-            public Message MapToMessage(OrderPickedUpByCookerEvent request)
-            {
-                var header = new MessageHeader(messageId: request.Id, topic: "OrderPickedUpByCookerEvent", messageType: MessageType.MT_EVENT);
-                var body = new MessageBody(JsonConvert.SerializeObject(request));
-                var message = new Message(header, body);
-                return message;
-            }
-
-            public OrderPickedUpByCookerEvent MapToRequest(Message message)
-            {
-                return JsonConvert.DeserializeObject<OrderPickedUpByCookerEvent>(message.Body.Value);
-            }
-        }
 
         public class SimpleMessageMapperFactory : IAmAMessageMapperFactory
         {
