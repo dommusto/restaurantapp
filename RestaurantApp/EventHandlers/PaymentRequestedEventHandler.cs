@@ -5,9 +5,9 @@ using RestaurantApp.Hubs;
 
 namespace RestaurantApp.EventHandlers
 {
-    public class OrderPreparedEventHandler : RequestHandler<OrderPreparedEvent>
+    public class PaymentRequestedEventHandler : RequestHandler<PaymentRequestedEvent>
     {
-        public override OrderPreparedEvent Handle(OrderPreparedEvent @event)
+        public override PaymentRequestedEvent Handle(PaymentRequestedEvent @event)
         {
             HubProvider.HubContext.Clients.All.SendAsync("ReceiveMessage", "EnablePayButton");
             return base.Handle(@event);

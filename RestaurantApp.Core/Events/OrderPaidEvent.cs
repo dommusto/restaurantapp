@@ -5,12 +5,12 @@ namespace RestaurantApp.Core.Events
 {
     public class OrderPaidEvent : IRequest
     {
-        private readonly string _orderId;
+        public string OrderId;
 
         public OrderPaidEvent(string orderId)
         {
+            OrderId = orderId;
             Id = Guid.NewGuid();
-            _orderId = orderId;
         }
 
         public Guid Id { get; set; }
