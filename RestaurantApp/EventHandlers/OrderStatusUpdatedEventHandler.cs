@@ -10,10 +10,6 @@ namespace RestaurantApp.EventHandlers
         public override OrderStatusUpdatedEvent Handle(OrderStatusUpdatedEvent @event)
         {
             HubProvider.HubContext.Clients.All.SendAsync("ReceiveMessage", @event.Status);
-            if (@event.Status == "Food ready")
-            {
-                HubProvider.HubContext.Clients.All.SendAsync("ReceiveMessage", "EnablePayButton");
-            }
             return base.Handle(@event);
         }
     }

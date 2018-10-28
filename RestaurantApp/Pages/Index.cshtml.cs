@@ -33,7 +33,6 @@ namespace RestaurantApp.Pages
             var addOrderCommand = new AddOrderCommand(SelectedMenuItem);
              _commandProcessor.Send(addOrderCommand);
             var orderId = addOrderCommand.OrderId;
-            _commandProcessor.Post(new PrepareOrderCommand(orderId));
             return RedirectToPage("Order", "OnGet", new { orderId });
         }
     }
