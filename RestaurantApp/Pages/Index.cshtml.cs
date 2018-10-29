@@ -1,10 +1,12 @@
 ﻿using System.Collections.Generic;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
+using Microsoft.AspNetCore.SignalR;
 using Paramore.Brighter;
 using Paramore.Darker;
 using RestaurantApp.Core.Commands;
 using RestaurantApp.Core.Queries;
+using RestaurantApp.Hubs;
 
 namespace RestaurantApp.Pages
 {
@@ -16,8 +18,9 @@ namespace RestaurantApp.Pages
         [BindProperty]
         public string SelectedMenuItem { get; set; }
         
-        public IndexModel(IQueryProcessor queryProcessor, IAmACommandProcessor commandProcessor)
+        public IndexModel(IHubContext<PushHub> hubContext, IQueryProcessor queryProcessor, IAmACommandProcessor commandProcessor)
         {
+            HubProvider.HubContext = hubContext;
             _queryProcessor = queryProcessor;
             _commandProcessor = commandProcessor;
             MenuItems = new List<string>();

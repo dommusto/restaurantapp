@@ -1,4 +1,6 @@
-﻿using Paramore.Brighter;
+﻿using System.Threading;
+using System.Threading.Tasks;
+using Paramore.Brighter;
 using RestaurantApp.Core.Commands;
 using RestaurantApp.Core.Events;
 
@@ -19,7 +21,12 @@ namespace RestaurantApp.Core.CommandHandlers
         {
             _ordersRepository.UpdateOrderStatus(command.OrderId, "Payment requested");
             _commandProcessor.Publish(new OrderStatusUpdatedEvent(command.OrderId, "Payment requested"));
-            _commandProcessor.Publish(new PaymentRequestedEvent(command.OrderId));
+            Task.Run(() =>
+            {
+                Thread.Sleep(4000);
+                _commandProcessor.Publish(new PaymentRequestedEvent(command.OrderId));
+            });
+            
             return base.Handle(command);
         }
     }
