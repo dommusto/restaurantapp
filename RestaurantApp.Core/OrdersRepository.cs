@@ -4,7 +4,7 @@ namespace RestaurantApp.Core
 {
     public class OrdersRepository : IOrdersRepository
     {
-        private string _orderStatus;
+        private string _orderStatus = "";
         private Guid id;
 
         public OrdersRepository()
