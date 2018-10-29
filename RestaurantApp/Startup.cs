@@ -40,35 +40,7 @@ namespace RestaurantApp
             services.AddMvc().SetCompatibilityVersion(CompatibilityVersion.Version_2_1);
 
         }
-
-        private void configure()
-        {
-            /*var dispatcher = DispatchBuilder.With()
-                .CommandProcessor(CommandProcessorBuilder.With()
-                    .Handlers(new HandlerConfiguration(subscriberRegistry, handlerFactory))
-                    .Policies(policyRegistry)
-                    .NoTaskQueues()
-                    .RequestContextFactory(new InMemoryRequestContextFactory())
-                    .Build())
-                .MessageMappers(messageMapperRegistry)
-                .ChannelFactory(new InputChannelFactory(rmqMessageConsumerFactory))
-                .Connections(connections)
-                .Build();
-
-
-            var dispatcher = DispatchBuilder.With()
-                .CommandProcessor(CommandProcessorBuilder.With()
-                    .Handlers(new HandlerConfiguration(subscriberRegistry, handlerFactory))
-                    .Policies(policyRegistry)
-                    .NoTaskQueues()
-                    .RequestContextFactory(new InMemoryRequestContextFactory())
-                    .Build())
-                .MessageMappers(messageMapperRegistry)
-                .ChannelFactory(new InputChannelFactory(rmqMessageConsumerFactory))
-                .Connections(connections)
-                .Build();*/
-        }
-
+        
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
         public void Configure(IApplicationBuilder app, IHostingEnvironment env)
         {
